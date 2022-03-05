@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <center>
+    <title>Search History</title>
+    <script>var globalVar = []</script>
+  </head>
+  <body>
+    <h1>Search History</h1>
+    <hr />
+    <table class="table" id="myTable">
+      
+        <tr>
+          <th scope="col">User Name</th>
+          <th scope="col">Search Date & Time</th>
+          <th scope="col">Search Keywords</th>
+          <th scope="col">Result List</th>
+        </tr>
+      
+        {% for i in data%}
+        <tr>
+          <td scope="row">{{i.user}}</td>
+          <td>{{i.search_time}}</td>
+          <td>{{i.keywords}}</td>
+          <td>{{i.result_list}}</td>
+        </tr>
+        {% endfor %}
+     
+    </table>
+  </center>
+  <form method="POST" onsubmit='filter(handleSubmit(event))'>
+    {% csrf_token %}
+      <div class="form-group">
+        <label for="exampleInputEmail1"><b>Search Keywords</b></label>
+      </div>
+      {% for i in  dis_keyword%}
+      <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="exampleCheck1" name="keyword[]" value="{{i.keywords}}">
+        <label class="form-check-label" for="exampleCheck1">{{i.keywords}} ({{i.count}} times found)</label>
+      </div>
+      {% endfor %}
+
+      <div class="form-group">
+        <label for="exampleInputEmail1"><b>User Name</b></label>
+      </div>
+      {% for i in  dis_user%}
+      <div class="form-check">
+        <input type="checkbox" name="user[]" id="exampleCheck1" value="{{i.user}}">
+        <label class="form-check-label" for="exampleCheck1">{{i.user}}</label>
+      </div>
+      {% endfor %}
+
+      <div class="form-group">
+        <label for="exampleInputEmail1"><b>Date Filter</b></label>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" name="date[]" id="exampleCheck1" value="seeYesterday">
+        <label class="form-check-label" for="exampleCheck1">See Data from Yesterday</label>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" name="date[]" id="exampleCheck1" value="seeLastWeek">
+        <label class="form-check-label" for="exampleCheck1">See Data from Last Week</label>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" name="date[]" id="exampleCheck1" value="seeLastMonth">
+        <label class="form-check-label" for="exampleCheck1">See Data from Last Month</label>
+      </div>
+
+      <label><h6>Start Date</h6></label>
+      
+        <input type="date" name="datef">
+        <br/>
+        <br/>
+        <label><h6>End Date</h6></label>
+
+        <input type="date" name="datet">
+        <br/>
+        <hr>
+        <div>
+            <button type="submit" class="btn btn-warning btn-lg">View</button>
+        </div>
+    </form>
+
+  
+    <!-- Optional JavaScript; choose one of the two! -->
+
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+
+    ></script>
+
+    <script>
+      if (!Array.prototype.filter) {
+        Array.prototype.filter = function(fun /*, thisp*/) {
+          var len = this.length >>> 0;
+          if (typeof fun != "function")
+            throw new TypeError();
+      
+          var res = [];
+          var thisp = arguments[1];
+          for (var i = 0; i < len; i++) {
+            if (i in this) {
+              var val = this[i];
+              if (fun.call(thisp, val, i, this))
+                res.push(val);
+            }
+          }
+          return res;
+        };
+      }
+
+      const handleEvent = (event) => {
+        let data = {};
+        const FormDataHere = new FormData(event.target)
+        Array.from(FormDataHere.entries()).forEach((e) => {
+          data[e[0]] = e[0].includes('[]') ? FormDataHere.getAll(e[0]) : FormDataHere.get(e[0]);
+        });
+        return data;
+      };
+      
+      const handleSubmit = (event) => {
+        event.preventDefault(); // stop refresh
+        return handleEvent(event);
+      };
+      
+      const filter = (data) =>  {
+        // console.log(data);
+        let outputData = [];
+        if(data['user[]']) {
+
+          data['user[]'].forEach((i) => {
+            outputData = outputData.concat(globalVar.filter(function (el) {
+              return el.username === i;
+            }))
+          })
+        }
+
+        if(data['keyword[]']) {
+
+          data['keyword[]'].forEach((i) => {
+            outputData = outputData.concat(globalVar.filter(function (el) {
+              return el.keyword === i;
+            }))
+          })
+        }
+
+        console.log(outputData);
+        showData(outputData)
+      }
+
+      const showData = (data) => {
+        var myTab1 = document.getElementById('myTable');
+        myTab1.innerHTML = `<tr>
+          <th scope="col">User Name</th>
+          <th scope="col">Search Date & Time</th>
+          <th scope="col">Search Keywords</th>
+          <th scope="col">Result List</th>
+        </tr>
+      `;
+      data.forEach((i) => {
+        myTab1.innerHTML += `<tr>
+          <td scope="row">${i.username}</td>
+          <td>${i.date}</td>
+          <td>${i.keyword}</td>
+          <td>${i.resultList}</td>
+        </tr>`
+      })
+      }
+
+      function showTableData() {
+       var myTab = document.getElementById('myTable');
+        // LOOP THROUGH EACH ROW OF THE TABLE AFTER HEADER.
+        for (i = 1; i < myTab.rows.length; i++) {
+
+            // GET THE CELLS COLLECTION OF THE CURRENT ROW.
+            var objCells = myTab.rows.item(i).cells;
+
+            globalVar.push({
+              'username': objCells.item(0).innerHTML,
+              'date': objCells.item(1).innerHTML,
+              'keyword': objCells.item(2).innerHTML,
+              'resultList': objCells.item(3).innerHTML,
+              
+            })
+
+          }
+             // ADD A BREAK (TAG).
+          console.log(globalVar);
+    }
+    showTableData()
+
+    </script>
+
+    <!-- Option 2: Separate Popper and Bootstrap JS -->
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+    -->
+  </body>
+</html>
